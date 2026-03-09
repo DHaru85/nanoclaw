@@ -356,6 +356,7 @@ function waitForIpcMessage(): Promise<string | null> {
  */
 async function runQuery(
   prompt: string,
+  modelOverride: string | undefined,
   sessionId: string | undefined,
   mcpServerPath: string,
   containerInput: ContainerInput,
@@ -418,6 +419,7 @@ async function runQuery(
     prompt: stream,
     options: {
       cwd: '/workspace/group',
+      model: modelOverride,
       additionalDirectories: extraDirs.length > 0 ? extraDirs : undefined,
       resume: sessionId,
       resumeSessionAt: resumeAt,
@@ -500,12 +502,19 @@ async function main(): Promise<void> {
     try { fs.unlinkSync('/tmp/input.json'); } catch { /* may not exist */ }
     log(`Received input for group: ${containerInput.groupFolder}`);
   } catch (err) {
+    log(`Failed to parse input: ${err instanceof Error ? err.message : String(err)}`);
     writeOutput({
       status: 'error',
       result: null,
       error: `Failed to parse input: ${err instanceof Error ? err.message : String(err)}`
     });
     process.exit(1);
+  }
+
+  // Set model if env var is set
+  const modelOverride = process.env.ANTROPIC_MODEL || 'claude-sonnet-4-6' ;
+  if (modelOverride) {
+    log(`Using model: ${modelOverride}`);
   }
 
   // Build SDK env: merge secrets into process.env for the SDK only.
@@ -541,7 +550,7 @@ async function main(): Promise<void> {
     while (true) {
       log(`Starting query (session: ${sessionId || 'new'}, resumeAt: ${resumeAt || 'latest'})...`);
 
-      const queryResult = await runQuery(prompt, sessionId, mcpServerPath, containerInput, sdkEnv, resumeAt);
+      const queryResult = await runQuery(prompt, modelOverride, sessionId, mcpServerPath, containerInput, sdkEnv, resumeAt);
       if (queryResult.newSessionId) {
         sessionId = queryResult.newSessionId;
       }

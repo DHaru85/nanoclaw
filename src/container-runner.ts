@@ -232,6 +232,28 @@ function buildContainerArgs(
   // Pass host timezone so container's local time matches the user's
   args.push('-e', `TZ=${TIMEZONE}`);
 
+  // Pass proxy environment variables if present on host
+  const proxyVars = [
+    'HTTPS_PROXY',
+    'HTTP_PROXY',
+    'NO_PROXY',
+    'https_proxy',
+    'http_proxy',
+    'no_proxy',
+  ];
+  for (const varName of proxyVars) {
+    const value = process.env[varName];
+    if (value) {
+      args.push('-e', `${varName}=${value}`);
+    }
+  }
+
+  // Pass selected model override if specified
+  const modelOverride = process.env.ANTHROPIC_MODEL;
+  if (modelOverride) {
+    args.push('-e', `ANTHROPIC_MODEL=${modelOverride}`);
+  }
+
   // Run as host user so bind-mounted files are accessible.
   // Skip when running as root (uid 0), as the container's node user (uid 1000),
   // or when getuid is unavailable (native Windows without WSL).

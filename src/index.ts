@@ -51,6 +51,20 @@ import { startSchedulerLoop } from './task-scheduler.js';
 import { Channel, NewMessage, RegisteredGroup } from './types.js';
 import { logger } from './logger.js';
 
+// Configure global proxy if environment variables are set
+// const proxyUrl = process.env.HTTPS_PROXY || process.env.https_proxy;
+// if (proxyUrl) {
+//   logger.info({ proxyUrl }, 'Configuring global proxy for all HTTP requests');
+//   try {
+//     const undici = await import('undici');
+//     const proxyAgent = new undici.ProxyAgent(proxyUrl);
+//     undici.setGlobalDispatcher(proxyAgent);
+//     logger.info('Global ProxyAgent configured successfully');
+//   } catch (err) {
+//     logger.warn({ err }, 'Failed to configure global proxy, continuing without proxy');
+//   }
+// }
+
 // Re-export for backwards compatibility during refactor
 export { escapeXml, formatMessages } from './router.js';
 
@@ -461,6 +475,21 @@ function ensureContainerSystemRunning(): void {
 }
 
 async function main(): Promise<void> {
+  // Configure global proxy BEFORE anything else
+  // const proxyUrl = process.env.HTTPS_PROXY || process.env.https_proxy;
+  // if (proxyUrl) {
+  //   logger.info({ proxyUrl }, 'Configuring global proxy...');
+  //   try {
+  //     const undici = await import('undici');
+  //     const proxyAgent = new undici.ProxyAgent(proxyUrl);
+  //     undici.setGlobalDispatcher(proxyAgent);
+  //     logger.info('Global ProxyAgent configured');
+  //   } catch (err) {
+  //     logger.error({ err }, 'Proxy configuration failed');
+  //     throw err;
+  //   }
+  // }
+
   ensureContainerSystemRunning();
   initDatabase();
   logger.info('Database initialized');
